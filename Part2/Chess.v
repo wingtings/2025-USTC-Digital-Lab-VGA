@@ -1,4 +1,4 @@
-module Sans(
+module Chess(
         input          clkk,
         input          rstn,
         input          PS2_CLK,
