@@ -19,8 +19,8 @@ module keyboard(
             ps2_c_f <= 1;
             ps2_d_f <= 1;
         end else begin
-            ps2_c_filter <= {ps2_c, ps2_c_filter[3:1]};
-            ps2_d_filter <= {ps2_d, ps2_d_filter[3:1]};
+            ps2_c_filter <= {ps2_clk, ps2_c_filter[3:1]};
+            ps2_d_filter <= {ps2_data, ps2_d_filter[3:1]};
             if (ps2_c_filter == 4'b1111)
                 ps2_c_f <= 1;
             else if (ps2_c_filter == 4'b0000)
