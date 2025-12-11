@@ -14,14 +14,13 @@ module Chess(
 
     wire clk; // System clock
     wire pclk; // Pixel clock
-    wire locked;
     
     // Instantiate Clock Wizard
     clk_wiz_0 clk_wiz_inst (
         .clk_out1(pclk), 
         .clk_out2(clk),  
         .reset(~rstn),
-        .locked(locked),
+        .locked(),
         .clk_in1(clkk)
     );
 
