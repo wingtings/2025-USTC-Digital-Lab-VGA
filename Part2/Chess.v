@@ -12,16 +12,15 @@ module Chess(
     output start // Audio enable 声音使能信号
 );
 
-    wire clk; // System clock   系统时钟
-    wire pclk; // Pixel clock   像素时钟, 用于驱动显示器
-    wire locked;    // Clock locked signal 时钟锁定信号
+    wire clk; // System clock
+    wire pclk; // Pixel clock
     
     // Instantiate Clock Wizard
     clk_wiz_0 clk_wiz_inst (
         .clk_out1(pclk),
         .clk_out2(clk),
         .reset(~rstn),
-        .locked(locked),    // 时钟锁定信号, 只有当时钟稳定后该信号才会被拉高
+        .locked(),
         .clk_in1(clkk)
     );
 
