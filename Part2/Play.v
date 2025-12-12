@@ -1,11 +1,11 @@
 module Play(
     input clk,
     input rstn,
-    input [1:0] state,
+    output reg [1:0] state,
     input [3:0] cursor_x,
     input [3:0] cursor_y,
     input is_pressed,
-    output reg [1:0] next_state,
+    // output reg [1:0] next_state,
     output [12*64-1:0] board_data,
     output reg [2:0] sound_code,
     output reg play_sound,
@@ -62,7 +62,7 @@ module Play(
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             // 复位逻辑
-            next_state <= PLAY_STATE;
+            state <= PLAY_STATE;
             game_over <= 2'b00;
             turn <= WHITE;
             has_selected <= 0;
@@ -105,9 +105,10 @@ module Play(
             prev_pressed <= is_pressed;
             play_sound <= 0; // 脉冲信号, 默认拉低
 
-            if (state == PLAY_STATE) begin
-                if (pressed_pulse) begin
-                    if (cursor_x < 8 && cursor_y < 8) begin
+            case (state)
+                PLAY_STATE: begin
+                    if (pressed_pulse) begin
+                        if (cursor_x < 8 && cursor_y < 8) begin
                         // 光标在棋盘内
                         if (!has_selected) begin
                             // 尝试选择棋子
@@ -139,7 +140,7 @@ module Play(
                                     // 检查游戏结束 (吃掉王)
                                     if (board[cursor_y][cursor_x][4] && board[cursor_y][cursor_x][2:0] == KING) begin
                                         game_over <= (turn == WHITE) ? 2'b10 : 2'b01; // 白胜 : 黑胜
-                                        next_state <= SETTLE_STATE;
+                                        state <= SETTLE_STATE;
                                     end
 
                                     // 执行移动
@@ -160,7 +161,12 @@ module Play(
                         // TODO: 处理认输, 悔棋, 求和, 重开等按钮
                     end
                 end
-            end
+                end
+                SETTLE_STATE: begin
+                    // 游戏结束状态
+                    // TODO: 添加重开逻辑
+                end
+            endcase
         end
     end
 
