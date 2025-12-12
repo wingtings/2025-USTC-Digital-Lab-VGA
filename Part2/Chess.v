@@ -9,32 +9,34 @@ module Chess(
     output hs,
     output vs,
     output pwm,
-    output start // Audio enable
+    output start // Audio enable 声音使能信号
 );
 
-    wire clk; // System clock
-    wire pclk; // Pixel clock
-    wire locked;
+    wire clk; // System clock   系统时钟
+    wire pclk; // Pixel clock   像素时钟, 用于驱动显示器
+    wire locked;    // Clock locked signal 时钟锁定信号
     
     // Instantiate Clock Wizard
     clk_wiz_0 clk_wiz_inst (
-        .clk_out1(pclk), 
-        .clk_out2(clk),  
+        .clk_out1(pclk),
+        .clk_out2(clk),
         .reset(~rstn),
-        .locked(locked),
+        .locked(locked),    // 时钟锁定信号, 只有当时钟稳定后该信号才会被拉高
         .clk_in1(clkk)
     );
 
-    // State Machine
+    // 游戏状态寄存器和定义
     reg [1:0] state;
     localparam MENU = 2'b00;
     localparam PLAY = 2'b01;
     localparam SETTLE = 2'b10;
     
+    // 次态线
     wire [1:0] next_state_menu;
     wire [1:0] next_state_play;
     wire [1:0] next_state_settle;
     
+    // 状态更新逻辑, 每个时钟周期根据当前状态和次态线更新状态
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             state <= MENU;
@@ -48,21 +50,21 @@ module Chess(
         end
     end
 
-    // Keyboard
+    // 键盘输入寄存器
     wire [10:0] key_event;
     keyboard keyboard_inst (
-        .clk_100mhz(clk),
+        .clk_100mhz(clk),   // 时钟
         .rst_n(rstn),
         .ps2_clk(PS2_CLK),
         .ps2_data(PS2_DATA),
         .key_event(key_event)
     );
 
-    // Selector
+    // 选择器光标模块
     wire [3:0] cursor_x;
     wire [3:0] cursor_y;
-    wire is_pressed;
-    wire [11:0] selected_piece;
+    wire is_pressed;    // 选择器是否按下逻辑线
+    wire [11:0] selected_piece; // 被选择的棋子信息
     
     Selector selector_inst (
         .clk(clk),
@@ -74,7 +76,7 @@ module Chess(
         .selected_piece(selected_piece)
     );
 
-    // Menu
+    // 菜单模块
     Menu menu_inst (
         .clk(clk),
         .rstn(rstn),
@@ -83,7 +85,7 @@ module Chess(
         .next_state(next_state_menu)
     );
 
-    // Play
+    // 对局模块
     wire [12*64-1:0] board_data;
     wire [2:0] sound_code;
     wire play_sound;
