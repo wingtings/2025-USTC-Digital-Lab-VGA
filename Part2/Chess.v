@@ -1,7 +1,7 @@
 module Chess(
     input clk,
     input rstn,
-    output audio_out;
+    output audio_out
 );
 
 wire [1:0] state;

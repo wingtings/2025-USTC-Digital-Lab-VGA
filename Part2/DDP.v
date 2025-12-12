@@ -23,7 +23,7 @@ module DDP(
     end
 
     reg [11:0] addra [13:0];
-    reg [11:0] douta [13:0];
+    wire [11:0] douta [13:0];
 
 blk_mem_gen_w_wang0001 w_wang0001 (
   .clka(pclk),    // input wire clka
