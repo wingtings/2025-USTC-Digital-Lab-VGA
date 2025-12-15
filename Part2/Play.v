@@ -52,7 +52,7 @@ module Play(
         for (gy = 0; gy < 8; gy = gy + 1) begin : map_row
             for (gx = 0; gx < 8; gx = gx + 1) begin : map_col
                 assign board_data[((gy * 8 + gx) * 12) + 11 : (gy * 8 + gx) * 12] = 
-                    {3'b0, (has_selected && sel_x == gx && sel_y == gy), board[gy][gx]};
+                    {3'b0, (sel_x == gx && sel_y == gy), board[gy][gx]};
             end
         end
     endgenerate
