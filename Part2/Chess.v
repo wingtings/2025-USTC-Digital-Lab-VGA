@@ -16,8 +16,8 @@ wire [11:0] addra;
 wire [11:0] douta;
 
 wire [1:0] state;
-reg [3:0] cursor_x;
-reg [3:0] cursor_y;
+reg [2:0] cursor_x;
+reg [2:0] cursor_y;
 reg is_pressed;
 wire [2:0] sound_code;
 wire play_sound;
@@ -39,8 +39,8 @@ clk_wiz_0 clk_wiz_0(
 // 光标位置和按键信号更新逻辑
 always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-        cursor_x <= 4'd0;
-        cursor_y <= 4'd0;
+        cursor_x <= 3'd0;
+        cursor_y <= 3'd0;
         is_pressed <= 1'b0;
         temp <= 8'd0;
     end else begin

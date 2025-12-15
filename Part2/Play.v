@@ -2,8 +2,8 @@ module Play(
     input clk,
     input rstn,
     output reg [1:0] state,
-    input [3:0] cursor_x,
-    input [3:0] cursor_y,
+    input [2:0] cursor_x,
+    input [2:0] cursor_y,
     input is_pressed,
     // output reg [1:0] next_state,
     output [12*64-1:0] board_data,
@@ -21,8 +21,8 @@ module Play(
     // 游戏状态
     reg turn; // 当前回合: 0: 白方, 1: 黑方
     reg has_selected; // 是否已选中棋子
-    reg [3:0] sel_x; // 选中棋子 X 坐标
-    reg [3:0] sel_y; // 选中棋子 Y 坐标
+    reg [2:0] sel_x; // 选中棋子 X 坐标
+    reg [2:0] sel_y; // 选中棋子 Y 坐标
 
     // 常量定义
     localparam WHITE = 1'b0;
@@ -57,6 +57,114 @@ module Play(
             end
         end
     endgenerate
+
+    // 移动逻辑判断
+    reg is_legal_move;
+    reg path_blocked;
+    integer k;
+    
+    wire [2:0] current_piece_type = board[sel_y][sel_x][2:0];   // 当前选中棋子类型
+    wire [3:0] abs_dx = (cursor_x > sel_x) ? (cursor_x - sel_x) : (sel_x - cursor_x);   // 水平绝对距离
+    wire [3:0] abs_dy = (cursor_y > sel_y) ? (cursor_y - sel_y) : (sel_y - cursor_y);   // 垂直绝对距离
+
+    always @(*) begin
+        is_legal_move = 0;
+        path_blocked = 0;
+
+        case (current_piece_type)
+            PAWN: begin
+                if (turn == WHITE) begin
+                    // Move 1 step forward
+                    if (abs_dx == 0 && cursor_y == sel_y + 1 && !board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                    // Move 2 steps forward
+                    else if (abs_dx == 0 && cursor_y == sel_y + 2 && sel_y == 1 && !board[sel_y+1][sel_x][4] && !board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                    // Capture
+                    else if (abs_dx == 1 && cursor_y == sel_y + 1 && board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                end else begin // BLACK
+                    // Move 1 step forward (y decreases)
+                    if (abs_dx == 0 && cursor_y == sel_y - 1 && !board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                    // Move 2 steps forward
+                    else if (abs_dx == 0 && cursor_y == sel_y - 2 && sel_y == 6 && !board[sel_y-1][sel_x][4] && !board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                    // Capture
+                    else if (abs_dx == 1 && cursor_y == sel_y - 1 && board[cursor_y][cursor_x][4])
+                        is_legal_move = 1;
+                end
+            end
+            
+            ROOK: begin
+                if (abs_dx == 0 || abs_dy == 0) begin
+                    // Check path
+                    if (abs_dx == 0) begin // Vertical
+                        for (k = 1; k < 8; k = k + 1) begin
+                            if (k < abs_dy) begin
+                                if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][sel_x][4]) path_blocked = 1;
+                            end
+                        end
+                    end else begin // Horizontal
+                        for (k = 1; k < 8; k = k + 1) begin
+                            if (k < abs_dx) begin
+                                if (board[sel_y][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
+                            end
+                        end
+                    end
+                    if (!path_blocked) is_legal_move = 1;
+                end
+            end
+            
+            KNIGHT: begin
+                if ((abs_dx == 1 && abs_dy == 2) || (abs_dx == 2 && abs_dy == 1))
+                    is_legal_move = 1;
+            end
+            
+            BISHOP: begin
+                if (abs_dx == abs_dy && abs_dx != 0) begin
+                    for (k = 1; k < 8; k = k + 1) begin
+                        if (k < abs_dx) begin
+                            if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
+                        end
+                    end
+                    if (!path_blocked) is_legal_move = 1;
+                end
+            end
+            
+            QUEEN: begin
+                if (abs_dx == 0 || abs_dy == 0) begin
+                    // Rook-like move
+                    if (abs_dx == 0) begin // Vertical
+                        for (k = 1; k < 8; k = k + 1) begin
+                            if (k < abs_dy) begin
+                                if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][sel_x][4]) path_blocked = 1;
+                            end
+                        end
+                    end else begin // Horizontal
+                        for (k = 1; k < 8; k = k + 1) begin
+                            if (k < abs_dx) begin
+                                if (board[sel_y][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
+                            end
+                        end
+                    end
+                    if (!path_blocked) is_legal_move = 1;
+                end else if (abs_dx == abs_dy) begin
+                    // Bishop-like move
+                    for (k = 1; k < 8; k = k + 1) begin
+                        if (k < abs_dx) begin
+                            if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
+                        end
+                    end
+                    if (!path_blocked) is_legal_move = 1;
+                end
+            end
+            
+            KING: begin
+                if (abs_dx <= 1 && abs_dy <= 1) is_legal_move = 1;
+            end
+        endcase
+    end
 
     integer i, j;
 
@@ -135,37 +243,36 @@ module Play(
                                     sound_code <= 3'd1; // 选择音效
                                     play_sound <= 1;
                                 end else begin
-                                    // 移动或吃子 (目标是空地或敌方)
-                                    // TODO: 这里可以添加移动规则校验
-                                    
-                                    // 检查游戏结束 (吃掉王)
-                                    if (board[cursor_y][cursor_x][4] && board[cursor_y][cursor_x][2:0] == KING) begin
-                                        game_over <= (turn == WHITE) ? 2'b10 : 2'b01; // 白胜 : 黑胜
-                                        state <= SETTLE_STATE;
-                                    end
+                                    if (is_legal_move) begin
+                                        // 移动或吃子 (目标是空地或敌方)
+                                        // TODO: 这里可以添加移动规则校验
 
-                                    // 执行移动
-                                    board[cursor_y][cursor_x] <= board[sel_y][sel_x];
-                                    board[sel_y][sel_x] <= 8'b0; // 清空原位置
-                                    
-                                    // 切换回合
-                                    turn <= ~turn;
-                                    has_selected <= 0;
-                                    
-                                    sound_code <= 3'd2; // 移动/吃子音效
-                                    play_sound <= 1;
+                                        // 检查游戏结束 (吃掉王)
+                                        if (board[cursor_y][cursor_x][4] && board[cursor_y][cursor_x][2:0] == KING) begin
+                                            game_over <= (turn == WHITE) ? 2'b10 : 2'b01; // 白胜 : 黑胜
+                                            state <= SETTLE_STATE;
+                                        end
+
+                                        // 执行移动
+                                        board[cursor_y][cursor_x] <= board[sel_y][sel_x];
+                                        board[sel_y][sel_x] <= 8'b0; // 清空原位置
+
+                                        // 切换回合
+                                        turn <= ~turn;
+                                        has_selected <= 0;
+
+                                        sound_code <= 3'd2; // 移动/吃子音效
+                                        play_sound <= 1;
+                                    end
                                 end
                             end
                         end
-                    end else begin
-                        // 光标在棋盘外 (按钮区域)
-                        // TODO: 处理认输, 悔棋, 求和, 重开等按钮
                     end
                 end
                 end
                 SETTLE_STATE: begin
-                    // 游戏结束状态
-                    // TODO: 添加重开逻辑
+                    sound_code <= 3'd3; // 游戏结束音效
+                    play_sound <= 1;
                 end
             endcase
         end
