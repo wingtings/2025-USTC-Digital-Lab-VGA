@@ -28,12 +28,12 @@ module Play(
     localparam WHITE = 1'b0;
     localparam BLACK = 1'b1;
     
-    localparam PAWN   = 3'd0; // 兵
-    localparam ROOK   = 3'd1; // 车
-    localparam KNIGHT = 3'd2; // 马
+    localparam PAWN   = 3'd6; // 兵
+    localparam ROOK   = 3'd5; // 车
+    localparam KNIGHT = 3'd4; // 马
     localparam BISHOP = 3'd3; // 象
-    localparam QUEEN  = 3'd4; // 后
-    localparam KING   = 3'd5; // 王
+    localparam QUEEN  = 3'd2; // 后
+    localparam KING   = 3'd1; // 王
 
     localparam PLAY_STATE = 2'b01;
     localparam SETTLE_STATE = 2'b10;

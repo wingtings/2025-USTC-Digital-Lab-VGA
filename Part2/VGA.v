@@ -38,7 +38,7 @@ Play play(
     .game_over() // Connect as needed
 );
 
-reg [10:0] key_event;   // 键盘事件寄存器
+wire [10:0] key_event;   // 键盘事件寄存器
 Keyboard Keyboard(
     .clk_100mhz(clk),
     .rst_n(rstn),
