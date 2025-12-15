@@ -22,10 +22,29 @@ clk_wiz_0 clk_wiz_0(
 );
 
 wire  [12*64-1 :0] board_data;
-Play Play(
+reg [3:0] cursor_x;
+reg [3:0] cursor_y;
+reg is_pressed;
+
+Play play(
     .clk(clk),
     .rstn(rstn),
-    .board_data(board_data)
+    .cursor_x(cursor_x), // Connect as needed
+    .cursor_y(cursor_y), // Connect as needed
+    .is_pressed(is_pressed), // Connect as needed
+    .board_data(board_data), // Connect as needed
+    .sound_code(),
+    .play_sound(),
+    .game_over() // Connect as needed
+);
+
+reg [10:0] key_event;   // 键盘事件寄存器
+Keyboard Keyboard(
+    .clk_100mhz(clk),
+    .rst_n(rstn),
+    .ps2_c(ps2_c),
+    .ps2_d(ps2_d),
+    .key_event(key_event)
 );
 
 DDP DDP(
