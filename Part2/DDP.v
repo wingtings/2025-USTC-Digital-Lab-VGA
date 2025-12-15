@@ -179,8 +179,26 @@ always @ (*) begin
                 // Play.v文件: {3'b0, is_selected(bit8), board[7:0]}
                 // bit9是光标颜色,bit8是光标是否存在, bit4是有效位, bit3是阵营, bit2:0是棋子类型
                 if (board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 8] == 1'b1 && board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 4] == 1'b0) begin //此处有光标且没有棋子   
-                    if(board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 9] == 1'b1) rgb = (douta[12] == 12'hFFF) ? (((m-60)/60 + (n-60)/60) % 2 == 1 ? 12'h555 : 12'hCCC) : douta[12]; //优先渲染光标(此处为红光标)
-                    else rgb = (douta[13] == 12'hFFF) ? (((m-60)/60 + (n-60)/60) % 2 == 1 ? 12'h555 : 12'hCCC) : douta[13]; //优先渲染光标(此处为黑光标)
+                    if(board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 9] == 1'b1) begin
+                      if(douta[12] == 12'hFFF) begin
+                        if(((m-60)/60 + (n-60)/60) % 2 == 0) rgb = 12'hCCC; //浅白
+                        else if(((m-60)/60 + (n-60)/60) % 2 == 1) rgb = 12'h555; //浅黑                        
+                      end
+                      else begin
+                        rgb = douta[12];
+                      end
+                    end
+                    //rgb = (douta[12] == 12'hFFF) ? (((m-60)/60 + (n-60)/60) % 2 == 1 ? 12'h555 : 12'hCCC) : douta[12]; //优先渲染光标(此处为红光标)
+                    else begin
+                      if(douta[13] == 12'hFFF) begin
+                        if(((m-60)/60 + (n-60)/60) % 2 == 0) rgb = 12'hCCC; //浅白
+                        else if(((m-60)/60 + (n-60)/60) % 2 == 1) rgb = 12'h555; //浅黑                        
+                      end
+                      else begin
+                        rgb = douta[13];
+                      end                      
+                    end
+                    //rgb = (douta[13] == 12'hFFF) ? (((m-60)/60 + (n-60)/60) % 2 == 1 ? 12'h555 : 12'hCCC) : douta[13]; //优先渲染光标(此处为黑光标)
                 end            
                 //然后看棋子
                 else if(board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 8] == 1'b1 && board_data[ (((n-60)/60)*8 + ((m-60)/60))*12 + 4] == 1'b1) begin
