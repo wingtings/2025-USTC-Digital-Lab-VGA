@@ -40,19 +40,20 @@ module Play(
 
     // 按键边沿检测
     reg prev_pressed;
-    wire pressed_pulse = is_pressed && !prev_pressed;
+    wire pressed_pulse = is_pressed && !prev_pressed;   // 检测按下的上升沿脉冲
 
     // 输出映射: 将 2D board 映射到 1D board_data
     // board_data 格式: 每个格子 12 位
-    // [11:9]: 预留/填充 (3'b0)
-    // [8]: 是否被选中 (1: 选中, 0: 未选中)
+    // [11:10]: 预留/填充 (2'b0)
+    // [9]: 光标状态(1: 已选中, 0: 未选中) 已选中的是红色光标，未选中是黑色光标
+    // [8]: 是否有光标 (1: 有光标, 0: 无光标)
     // [7:0]: 棋盘数据 (board[y][x])
     genvar gy, gx;
     generate
         for (gy = 0; gy < 8; gy = gy + 1) begin : map_row
             for (gx = 0; gx < 8; gx = gx + 1) begin : map_col
                 assign board_data[((gy * 8 + gx) * 12) + 11 : (gy * 8 + gx) * 12] = 
-                    {3'b0, (sel_x == gx && sel_y == gy), board[gy][gx]};
+                    {2'b0, has_selected, (sel_x == gx && sel_y == gy), board[gy][gx]};
             end
         end
     endgenerate
