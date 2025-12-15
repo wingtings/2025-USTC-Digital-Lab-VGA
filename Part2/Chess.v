@@ -58,7 +58,9 @@ always @(posedge clk or negedge rstn) begin
                 8'h29:  begin is_pressed <= 1'b1; end // Space: 选中
                 default: ;
             endcase
+            temp <= key_event[7:0];
         end else begin
+            temp <= key_event[7:0];
             is_pressed <= 1'b0;
         end
     end

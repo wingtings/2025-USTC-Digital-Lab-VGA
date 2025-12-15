@@ -81,7 +81,7 @@ module Keyboard(input clk_100mhz,
                         key_event[10] <= 1;//key_event[10]==1代表当前数据有效
                     end
                 counter <= 0;
-            end 
+            end
             else begin
                 counter <= counter + 1;
                 if(key_event[10]) begin
