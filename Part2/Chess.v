@@ -23,8 +23,8 @@ wire [2:0] sound_code;
 wire play_sound;
 wire game_over;
 wire [12*64-1:0] board_data;
-wire [10:0] key_event;   // 键盘事件寄存�?
-reg prev_key_valid; // 上一个时钟周期的按键有效标志�?
+wire [10:0] key_event;   // 键盘事件寄存器
+reg [7:0] temp; // 上一个时钟周期的按键码
 
 wire pclk;
 clk_wiz_0 clk_wiz_0(
@@ -36,33 +36,30 @@ clk_wiz_0 clk_wiz_0(
 );
 
 
-// 光标位置和按键信号更新�?�辑
+// 光标位置和按键信号更新逻辑
 always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         cursor_x <= 4'd0;
         cursor_y <= 4'd0;
         is_pressed <= 1'b0;
-        prev_key_valid <= 1'b0;
+        temp <= 8'd0;
     end else begin
-        prev_key_valid <= key_event[10];    // 更新上一个周期的按键有效标志�?
-        // key_event 数据: �? 11 �?:
-        // 有效标志�?(1) 扩展标志�?(1) 断码标志�?(1) ASCII�?(8) QWEADZXC 控制光标方向, 空格表示按下
-        if (key_event[10] && !prev_key_valid) begin // 只有 key_event[10] �? 0 变成 1 才会 
-            if (!key_event[8]) begin
-                case (key_event[7:0])
-                    8'h51, 8'h71:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y - 1; end// Q/q: 左上
-                    8'h45, 8'h65:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y - 1; end// E/e: 右上
-                    8'h5A, 8'h7A:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y + 1; end// Z/z: 左下
-                    8'h43, 8'h63:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y + 1; end// C/c: 右下
-                    8'h57, 8'h77:  begin cursor_y <= cursor_y - 1; end// W/w: �?
-                    8'h58, 8'h78:  begin cursor_y <= cursor_y + 1; end// X/x: �?
-                    8'h41, 8'h61:  begin cursor_x <= cursor_x - 1; end// A/a: �?
-                    8'h44, 8'h64:  begin cursor_x <= cursor_x + 1; end// D/d: �?
-                    default: ;
-                endcase
-            end
-        end else if (!key_event[10]) begin
-            is_pressed <= 1'b0; // 松开按键
+        temp <= key_event[7:0];
+        if (key_event[10] && !key_event[8] && temp != key_event[7:0]) begin
+            case (key_event[7:0])
+                8'h15:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y - 1; end// Q: 左上
+                8'h24:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y - 1; end// E: 右上
+                8'h1A:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y + 1; end// Z: 左下
+                8'h21:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y + 1; end// C: 右下
+                8'h1D:  begin cursor_y <= cursor_y - 1; end// W: 上
+                8'h22:  begin cursor_y <= cursor_y + 1; end// X: 下
+                8'h1C:  begin cursor_x <= cursor_x - 1; end// A: 左
+                8'h23:  begin cursor_x <= cursor_x + 1; end// D: 右
+                8'h29:  begin is_pressed <= 1'b1; end // Space: 选中
+                default: ;
+            endcase
+        end else begin
+            is_pressed <= 1'b0;
         end
     end
 end
