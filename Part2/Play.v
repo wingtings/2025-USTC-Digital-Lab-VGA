@@ -1,16 +1,15 @@
 module Play(
     input clk,
     input rstn,
-    output reg [1:0] state,
-    input [2:0] cursor_x,
-    input [2:0] cursor_y,
-    input is_pressed,
-    input is_s_pressed,
-    // output reg [1:0] next_state,
-    output [12*64-1:0] board_data,
-    output reg [2:0] sound_code,
-    output reg play_sound,
-    output [7:0] wanted_promotion // 期望升变的棋子类型
+    output reg [1:0] state, // 当前游戏状态输出
+    input [2:0] cursor_x,   // 光标 X 坐标
+    input [2:0] cursor_y,   // 光标 Y 坐标
+    input is_pressed,   // 现在是否有按键按下
+    input is_s_pressed, // 现在 S 键是否按下
+    output [12*64-1:0] board_data,  // 一位棋盘数据输出, 这里是把 8x8 的棋盘按照从上到下从左到右的顺序成一维数组, 发给渲染模块(DDP) 进行画面渲染
+    output reg [2:0] sound_code,    // 音效码, 发给 Sound 模块指定需要播放的音效
+    output reg play_sound,  // 音效使能信号, 发给 Sound 模块指定当前是否需要播放音效
+    output [7:0] wanted_promotion // 期望升变的棋子类型, 发给 DDP 模块用于渲染额外棋子, 如果当前棋子不需要升变的话会直接输出当前光标所在格子内的棋子的数据
 );
 
     // 棋盘寄存器堆: 8x8, 每个寄存器 8 位
@@ -213,15 +212,15 @@ module Play(
             for (gx = 0; gx < 8; gx = gx + 1) begin : map_col
                 // 选中棋子高亮逻辑: 选中位置的 [9] 和 [8] 都置 1
                 wire is_cursor = (cursor_x == gx && cursor_y == gy);
-                wire is_selected_pos = (has_selected && sel_x == gx && sel_y == gy);
+                wire is_selected_pos = ((has_selected && sel_x == gx && sel_y == gy) || (has_selected && cursor_x == gx && cursor_y == gy));
                 wire is_hint = legal_moves_mask[gy*8 + gx];
-                
+                // is_selected_pos 用于显示红色光标, 仅有两种情况显示红色光标: 当前已经有棋子被选中且光标在该位置, 或者该位置就是被选中的棋子位置
                 // 如果正在升变，且是升变位置，显示当前选择的升变棋子
                 wire [7:0] wanted_promotion = (promoting && prom_x == gx && prom_y == gy) ? 
                                            {1'b1, turn, prom_piece} : board[gy][gx];
 
                 assign board_data[((gy * 8 + gx) * 12) + 11 : (gy * 8 + gx) * 12] = 
-                    {2'b0, (is_selected_pos || is_hint), (is_cursor || is_selected_pos || is_hint), wanted_promotion};
+                    {2'b0, (is_selected_pos), (is_cursor || is_selected_pos || is_hint), wanted_promotion};
             end
         end
     endgenerate

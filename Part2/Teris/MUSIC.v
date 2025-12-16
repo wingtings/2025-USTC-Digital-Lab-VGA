@@ -20,7 +20,6 @@ module MUSIC(
         else if(t==0) begin clk_out<=~clk_out;t<=total; end
         else begin t<=t-1; end
 
-
     reg [8:1]state;
     always@(posedge clk_out,negedge rstn)         
         if(~rstn) state<=0;
