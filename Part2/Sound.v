@@ -1,4 +1,4 @@
-module MUSIC(
+module Sound(
     input clk,
     input rstn,             
     input [2:0] sound_code,
