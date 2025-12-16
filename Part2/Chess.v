@@ -8,7 +8,7 @@ module Chess(
     output  [3:0]  blue,
     output         hs,
     output         vs,
-    output pwm
+    output         pwm
 );
 
 // 游戏状态定义
@@ -26,8 +26,8 @@ reg [2:0] cursor_x;
 reg [2:0] cursor_y;
 reg is_pressed;
 reg is_g_pressed;
-//wire [2:0] sound_code;
-//wire play_sound;
+wire [2:0] sound_code;
+wire play_sound;
 wire game_over;
 wire [12*64-1:0] board_data;
 wire [10:0] key_event;   // 键盘事件寄存器
@@ -77,8 +77,6 @@ always @(posedge clk or negedge rstn) begin
     end
 end
 
-wire [2:0] sound_code;  // 音效码
-wire play_sound;    // 是否播放声音信号
 Play play(
     .clk(clk),
     .rstn(rstn),
@@ -93,13 +91,13 @@ Play play(
     .wanted_promotion(wanted_promotion) // 期望升变的棋子类型
 );
 
-// Sound sound(
-//     .clk(clk),
-//     .rstn(rstn),
-//     .sound_code(sound_code),
-//     .play_sound(play_sound),
-//     .B(audio_out)
-// );
+Sound sound(
+    .clk(clk),
+    .rstn(rstn),
+    .sound_code(sound_code),
+    .play_sound(play_sound),
+    .B(pwm)
+);
 
 DDP DDP(
     .hen(hen),
