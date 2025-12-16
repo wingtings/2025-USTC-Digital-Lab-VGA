@@ -8,6 +8,7 @@ module DDP(
     input [1:0] state,  // 当前游戏状态, 根据不同状态实现不同渲染策略
     input [12*64-1:0] board_data, //棋局
     input [11:0] rdata,
+    input [7:0] wanted_promotion, // 期望升变的棋子类型
     output reg [11:0]      raddr, 
     output reg [11:0]      rgbb
 );
