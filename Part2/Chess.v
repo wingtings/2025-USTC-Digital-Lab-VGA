@@ -70,7 +70,8 @@ always @(posedge clk or negedge rstn) begin
             endcase
             temp <= key_event[7:0];
         end else begin
-            temp <= key_event[7:0];
+            if (key_event[10] && key_event[8]) temp <= 8'h00;
+            else temp <= temp;
             is_pressed <= 1'b0;
             is_g_pressed <= 1'b0;
         end
