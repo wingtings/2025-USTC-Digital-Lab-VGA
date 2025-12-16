@@ -6,7 +6,7 @@ module DDP(
     input hen,
     input ven,
     input [1:0] state,  // 当前游戏状态, 根据不同状态实现不同渲染策略
-    input [1:0] game_over, //00: Draw, 01: Play, 10: Black Win, 11: White Win
+//    input [1:0] game_over, //00: Draw, 01: Play, 10: Black Win, 11: White Win
     input [12*64-1:0] board_data, //棋局
     input [11:0] rdata,
     input [7:0] wanted_promotion, // 期望升变的棋子类型
@@ -31,10 +31,10 @@ reg [11:0] addra;
 wire [11:0] douta [13:0];
 
 // 游戏状态定义
-localparam PLAY_STATE = 2'b01;//play
-localparam BLACK_WIN_STATE = 2'b10; // 黑胜
-localparam WHITE_WIN_STATE = 2'b11; // 白胜
-localparam DRAW_STATE = 2'b00; // Draw
+//localparam PLAY_STATE = 2'b01;//play
+//localparam BLACK_WIN_STATE = 2'b10; // 黑胜
+//localparam WHITE_WIN_STATE = 2'b11; // 白胜
+//localparam DRAW_STATE = 2'b00; // Draw
 
 blk_mem_gen_w_wang0001 w_wang0001 (
   .clka(pclk),    // input wire clka
@@ -293,7 +293,6 @@ always @ (*) begin
             end
 
             else if(m>=600 && m<660 && n>=360 && n<420) begin //渲染升变棋子
-              if(game_over == PLAY_STATE) begin
                 type = {wanted_promotion[3],//阵营(bit3)
                         wanted_promotion[2],//类型(bit2)
                         wanted_promotion[1],
@@ -314,20 +313,9 @@ always @ (*) begin
                     default: rgb = 12'h000;  //没有棋子的时候渲染黑色          
                 endcase
               end
-              else if(game_over == BLACK_WIN_STATE) begin
-                rgb = douta[6]; //黑王
-              end
-              else if(game_over == WHITE_WIN_STATE) begin
-                rgb = douta[0]; //白王
-              end
-              else begin
-                rgb = 12'hF00; //平局显示红色
-              end
-            end
-            else rgb=12'h000;
+        end
+        else rgb=12'h000;
     end
-  end
 end
-
 
 endmodule
