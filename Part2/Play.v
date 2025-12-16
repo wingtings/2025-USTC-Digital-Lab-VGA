@@ -217,11 +217,11 @@ module Play(
                 wire is_hint = legal_moves_mask[gy*8 + gx];
                 
                 // 如果正在升变，且是升变位置，显示当前选择的升变棋子
-                wire [7:0] display_piece = (promoting && prom_x == gx && prom_y == gy) ? 
+                wire [7:0] wanted_promotion = (promoting && prom_x == gx && prom_y == gy) ? 
                                            {1'b1, turn, prom_piece} : board[gy][gx];
 
                 assign board_data[((gy * 8 + gx) * 12) + 11 : (gy * 8 + gx) * 12] = 
-                    {2'b0, (is_selected_pos || is_hint), (is_cursor || is_selected_pos || is_hint), display_piece};
+                    {2'b0, (is_selected_pos || is_hint), (is_cursor || is_selected_pos || is_hint), wanted_promotion};
             end
         end
     endgenerate
