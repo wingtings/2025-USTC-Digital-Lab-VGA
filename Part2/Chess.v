@@ -20,7 +20,7 @@ localparam DRAW_STATE = 2'b00; // 和棋
 wire hen,ven;
 wire [11:0] addra;
 wire [11:0] douta;
-
+wire turn; // 0: White, 1: Black
 wire [1:0] state;
 reg [2:0] cursor_x;
 reg [2:0] cursor_y;
@@ -28,7 +28,7 @@ reg is_pressed;
 reg is_g_pressed;
 wire [2:0] sound_code;
 wire play_sound;
-wire game_over;
+wire [1:0] game_over; //00: Draw, 01: Play, 10: Black Win, 11: White Win
 wire [12*64-1:0] board_data;
 wire [10:0] key_event;   // 键盘事件寄存器
 reg [7:0] temp; // 上一个时钟周期的按键码
@@ -89,7 +89,8 @@ Play play(
     .board_data(board_data),
     .sound_code(sound_code),
     .play_sound(play_sound),
-    .wanted_promotion(wanted_promotion) // 期望升变的棋子类型
+    .wanted_promotion(wanted_promotion), // 期望升变的棋子类型
+    .turnstate(turn)
 );
 
 Sound sound(
@@ -110,7 +111,8 @@ DDP DDP(
     .raddr(addra),       // 连接图像地址输出
     .rgbb({red,green,blue}),
     .state(state),  // 根据当前状态实现不同渲染策略
-    .wanted_promotion(wanted_promotion) //升变棋子信息
+    .wanted_promotion(wanted_promotion), //升变棋子信息
+    .game_over(game_over) //游戏结束信息
 );
 
 DST DST(
@@ -128,6 +130,14 @@ Keyboard keyboard(
     .ps2_c(PS2_CLK),
     .ps2_d(PS2_DATA),
     .key_event(key_event)
+);
+
+Over over(
+    .clkk(clk),
+    .rstn(rstn),
+    .board_data(board_data),
+    .turn(turn), // 0: White, 1: Black
+    .game_over(game_over) // 00: Draw, 01: Play, 10: Black Win, 11: White Win
 );
 
 endmodule

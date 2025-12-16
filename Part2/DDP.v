@@ -6,6 +6,7 @@ module DDP(
     input hen,
     input ven,
     input [1:0] state,  // 当前游戏状态, 根据不同状态实现不同渲染策略
+    input [1:0] game_over, //00: Draw, 01: Play, 10: Black Win, 11: White Win
     input [12*64-1:0] board_data, //棋局
     input [11:0] rdata,
     input [7:0] wanted_promotion, // 期望升变的棋子类型
@@ -30,10 +31,10 @@ reg [11:0] addra;
 wire [11:0] douta [13:0];
 
 // 游戏状态定义
-localparam PLAY_STATE = 2'b01;
+localparam PLAY_STATE = 2'b01;//play
 localparam BLACK_WIN_STATE = 2'b10; // 黑胜
 localparam WHITE_WIN_STATE = 2'b11; // 白胜
-localparam DRAW_STATE = 2'b00; // 和棋
+localparam DRAW_STATE = 2'b00; // Draw
 
 blk_mem_gen_w_wang0001 w_wang0001 (
   .clka(pclk),    // input wire clka
@@ -292,25 +293,36 @@ always @ (*) begin
             end
 
             else if(m>=600 && m<660 && n>=360 && n<420) begin //渲染升变棋子
-              type = {wanted_promotion[3],//阵营(bit3)
-                      wanted_promotion[2],//类型(bit2)
-                      wanted_promotion[1],
-                      wanted_promotion[0]};
-              case (type) 
-                  4'b0001: rgb = (douta[0] == 12'h0F2) ? 12'h000 : douta[0]; //白王 特殊处理
-                  4'b0010: rgb = (douta[1] == 12'h0F2) ? 12'h000 : douta[1]; //白后 特殊处理
-                  4'b0011: rgb = (douta[2] == 12'h0F2) ? 12'h000 : douta[2]; //白象 特殊处理
-                  4'b0100: rgb = (douta[3] == 12'h0F2) ? 12'h000: douta[3]; //白马 特殊处理
-                  4'b0101: rgb = (douta[4] == 12'h0F2) ? 12'h000: douta[4]; //白车 特殊处理
-                  4'b0110: rgb = (douta[5] == 12'h0F2) ? 12'h000: douta[5]; //白兵 特殊处理
-                  4'b1001: rgb = (douta[6] == 12'h0F2) ? 12'h000: douta[6]; //黑王 特殊处理
-                  4'b1010: rgb = (douta[7] == 12'h0F2) ? 12'h000: douta[7]; //黑后 特殊处理
-                  4'b1011: rgb = (douta[8] == 12'h0F2) ? 12'h000: douta[8]; //黑象 特殊处理
-                  4'b1100: rgb = (douta[9] == 12'h0F2) ? 12'h000: douta[9]; //黑马 特殊处理
-                  4'b1101: rgb = (douta[10] == 12'h0F2) ? 12'h000 : douta[10]; //黑车 特殊处理
-                  4'b1110: rgb = (douta[11] == 12'h0F2) ? 12'h000 : douta[11]; //黑兵 特殊处理
-                  default: rgb = 12'h000;  //没有棋子的时候渲染黑色          
-              endcase
+              if(game_over == PLAY_STATE) begin
+                type = {wanted_promotion[3],//阵营(bit3)
+                        wanted_promotion[2],//类型(bit2)
+                        wanted_promotion[1],
+                        wanted_promotion[0]};
+                case (type) 
+                    4'b0001: rgb = (douta[0] == 12'h0F2) ? 12'h000 : douta[0]; //白王 特殊处理
+                    4'b0010: rgb = (douta[1] == 12'h0F2) ? 12'h000 : douta[1]; //白后 特殊处理
+                    4'b0011: rgb = (douta[2] == 12'h0F2) ? 12'h000 : douta[2]; //白象 特殊处理
+                    4'b0100: rgb = (douta[3] == 12'h0F2) ? 12'h000: douta[3]; //白马 特殊处理
+                    4'b0101: rgb = (douta[4] == 12'h0F2) ? 12'h000: douta[4]; //白车 特殊处理
+                    4'b0110: rgb = (douta[5] == 12'h0F2) ? 12'h000: douta[5]; //白兵 特殊处理
+                    4'b1001: rgb = (douta[6] == 12'h0F2) ? 12'h000: douta[6]; //黑王 特殊处理
+                    4'b1010: rgb = (douta[7] == 12'h0F2) ? 12'h000: douta[7]; //黑后 特殊处理
+                    4'b1011: rgb = (douta[8] == 12'h0F2) ? 12'h000: douta[8]; //黑象 特殊处理
+                    4'b1100: rgb = (douta[9] == 12'h0F2) ? 12'h000: douta[9]; //黑马 特殊处理
+                    4'b1101: rgb = (douta[10] == 12'h0F2) ? 12'h000 : douta[10]; //黑车 特殊处理
+                    4'b1110: rgb = (douta[11] == 12'h0F2) ? 12'h000 : douta[11]; //黑兵 特殊处理
+                    default: rgb = 12'h000;  //没有棋子的时候渲染黑色          
+                endcase
+              end
+              else if(game_over == BLACK_WIN_STATE) begin
+                rgb = douta[6]; //黑王
+              end
+              else if(game_over == WHITE_WIN_STATE) begin
+                rgb = douta[0]; //白王
+              end
+              else begin
+                rgb = 12'hF00; //平局显示红色
+              end
             end
             else rgb=12'h000;
     end

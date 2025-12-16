@@ -9,7 +9,8 @@ module Play(
     output [12*64-1:0] board_data,  // 一位棋盘数据输出, 这里是把 8x8 的棋盘按照从上到下从左到右的顺序成一维数组, 发给渲染模块(DDP) 进行画面渲染
     output reg [2:0] sound_code,    // 音效码, 发给 Sound 模块指定需要播放的音效
     output reg play_sound,  // 音效使能信号, 发给 Sound 模块指定当前是否需要播放音效
-    output [7:0] wanted_promotion // 期望升变的棋子类型, 发给 DDP 模块用于渲染额外棋子, 如果当前棋子不需要升变的话会直接输出当前光标所在格子内的棋子的数据
+    output [7:0] wanted_promotion, // 期望升变的棋子类型, 发给 DDP 模块用于渲染额外棋子, 如果当前棋子不需要升变的话会直接输出当前光标所在格子内的棋子的数据
+    output turn_state
 );
 
     // 棋盘寄存器堆: 8x8, 每个寄存器 8 位
@@ -20,6 +21,7 @@ module Play(
 
     // 游戏状态
     reg turn; // 当前回合: 0: 白方, 1: 黑方
+    assign turn_state = turn;
     reg has_selected; // 是否已选中棋子
     reg [2:0] sel_x; // 选中棋子 X 坐标
     reg [2:0] sel_y; // 选中棋子 Y 坐标
