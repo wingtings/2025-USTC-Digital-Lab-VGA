@@ -26,8 +26,8 @@ reg [2:0] cursor_x;
 reg [2:0] cursor_y;
 reg is_pressed;
 reg is_s_pressed;
-wire [2:0] sound_code;
-wire play_sound;
+//wire [2:0] sound_code;
+//wire play_sound;
 wire game_over;
 wire [12*64-1:0] board_data;
 wire [10:0] key_event;   // 键盘事件寄存器
@@ -98,7 +98,7 @@ Play play(
 //     .rstn(rstn),
 //     .sound_code(sound_code),
 //     .play_sound(play_sound),
-//     .audio_out(audio_out)
+//     .B(audio_out)
 // );
 
 DDP DDP(
@@ -111,6 +111,7 @@ DDP DDP(
     .raddr(addra),       // 连接图像地址输出
     .rgbb({red,green,blue}),
     .state(state),  // 根据当前状态实现不同渲染策略
+    .wanted_promotion(wanted_promotion) //升变棋子信息
 );
 
 DST DST(

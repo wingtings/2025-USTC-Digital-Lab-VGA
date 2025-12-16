@@ -290,7 +290,29 @@ always @ (*) begin
                         rgb = 12'h555; //浅黑
                 end
             end
-        else rgb=12'h000;
+
+            else if(m>=600 && m<660 && n>=360 && n<420) begin //渲染升变棋子
+              type = {wanted_promotion[3],//阵营(bit3)
+                      wanted_promotion[2],//类型(bit2)
+                      wanted_promotion[1],
+                      wanted_promotion[0]};
+              case (type) 
+                  4'b0001: rgb = (douta[0] == 12'h431) ? 12'h000 : douta[0]; //白王 特殊处理
+                  4'b0010: rgb = (douta[1] == 12'hDDA) ? 12'h000 : douta[1]; //白后 特殊处理
+                  4'b0011: rgb = (douta[2] == 12'hDDA) ? 12'h000 : douta[2]; //白象 特殊处理
+                  4'b0100: rgb = (douta[3] == 12'h431) ? 12'h000: douta[3]; //白马 特殊处理
+                  4'b0101: rgb = (douta[4] == 12'hDDA) ? 12'h000: douta[4]; //白车 特殊处理
+                  4'b0110: rgb = (douta[5] == 12'hDDA) ? 12'h000: douta[5]; //白兵 特殊处理
+                  4'b1001: rgb = (douta[6] == 12'hDDA) ? 12'h000: douta[6]; //黑王 特殊处理
+                  4'b1010: rgb = (douta[7] == 12'h431) ? 12'h000: douta[7]; //黑后 特殊处理
+                  4'b1011: rgb = (douta[8] == 12'h431) ? 12'h000: douta[8]; //黑象 特殊处理
+                  4'b1100: rgb = (douta[9] == 12'hDDA) ? 12'h000: douta[9]; //黑马 特殊处理
+                  4'b1101: rgb = (douta[10] == 12'h431) ? 12'h000 : douta[10]; //黑车 特殊处理
+                  4'b1110: rgb = (douta[11] == 12'hDDA) ? 12'h000 : douta[11]; //黑兵 特殊处理
+                  default: rgb = 12'hF00;  //错误显示红色             
+              endcase
+            end
+            else rgb=12'h000;
     end
   end
 end
