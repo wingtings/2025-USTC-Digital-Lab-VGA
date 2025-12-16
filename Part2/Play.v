@@ -5,7 +5,7 @@ module Play(
     input [2:0] cursor_x,   // 光标 X 坐标
     input [2:0] cursor_y,   // 光标 Y 坐标
     input is_pressed,   // 现在是否有按键按下
-    input is_s_pressed, // 现在 S 键是否按下
+    input is_g_pressed, // 现在 S 键是否按下
     output [12*64-1:0] board_data,  // 一位棋盘数据输出, 这里是把 8x8 的棋盘按照从上到下从左到右的顺序成一维数组, 发给渲染模块(DDP) 进行画面渲染
     output reg [2:0] sound_code,    // 音效码, 发给 Sound 模块指定需要播放的音效
     output reg play_sound,  // 音效使能信号, 发给 Sound 模块指定当前是否需要播放音效
@@ -67,8 +67,8 @@ module Play(
     reg prev_pressed;
     wire pressed_pulse = is_pressed && !prev_pressed;   // 检测按下的上升沿脉冲
     
-    reg prev_s_pressed;
-    wire s_pressed_pulse = is_s_pressed && !prev_s_pressed;
+    reg prev_g_pressed;
+    wire g_pressed_pulse = is_g_pressed && !prev_g_pressed;
 
     // ---------------------------------------------------------
     // Legal Moves Mask Generation (for highlighting)
@@ -216,14 +216,17 @@ module Play(
                 wire is_hint = legal_moves_mask[gy*8 + gx];
                 // is_selected_pos 用于显示红色光标, 仅有两种情况显示红色光标: 当前已经有棋子被选中且光标在该位置, 或者该位置就是被选中的棋子位置
                 // 如果正在升变，且是升变位置，显示当前选择的升变棋子
-                wire [7:0] wanted_promotion = (promoting && prom_x == gx && prom_y == gy) ? 
+                wire [7:0] cell_wanted_promotion = (promoting && prom_x == gx && prom_y == gy) ? 
                                            {1'b1, turn, prom_piece} : board[gy][gx];
 
                 assign board_data[((gy * 8 + gx) * 12) + 11 : (gy * 8 + gx) * 12] = 
-                    {2'b0, (is_selected_pos), (is_cursor || is_selected_pos || is_hint), wanted_promotion};
+                    {2'b0, (is_selected_pos), (is_cursor || is_selected_pos || is_hint), cell_wanted_promotion};
             end
         end
     endgenerate
+
+    // 输出端口赋值: 升变时显示选择的棋子，否则显示光标下的棋子
+    assign wanted_promotion = (promoting) ? {1'b1, turn, prom_piece} : board[cursor_y][cursor_x];
 
     // 移动逻辑判断
     reg is_legal_move;
@@ -383,7 +386,7 @@ module Play(
             sound_code <= 0;
             play_sound <= 0;
             prev_pressed <= 0;
-            prev_s_pressed <= 0;
+            prev_g_pressed <= 0;
             
             promoting <= 0;
             prom_piece <= QUEEN;
@@ -424,7 +427,7 @@ module Play(
 
         end else begin
             prev_pressed <= is_pressed;
-            prev_s_pressed <= is_s_pressed;
+            prev_g_pressed <= is_g_pressed;
             play_sound <= 0; // 脉冲信号, 默认拉低
 
             case (state)
@@ -432,7 +435,7 @@ module Play(
                     game_over_sound_played <= 0; // 在游戏进行中重置标志
                     if (promoting) begin
                         // 升变选择阶段
-                        if (s_pressed_pulse) begin
+                        if (pressed_pulse) begin
                             // 切换升变棋子
                             case (prom_piece)
                                 QUEEN: prom_piece <= ROOK;
@@ -443,7 +446,7 @@ module Play(
                             endcase
                             sound_code <= SND_SELECT; // 切换音效
                             play_sound <= 1;
-                        end else if (pressed_pulse) begin
+                        end else if (g_pressed_pulse) begin
                             // 确认升变
                             board[prom_y][prom_x] <= {1'b1, turn, prom_piece};
                             promoting <= 0;

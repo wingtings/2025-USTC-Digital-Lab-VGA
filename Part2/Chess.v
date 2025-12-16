@@ -25,7 +25,7 @@ wire [1:0] state;
 reg [2:0] cursor_x;
 reg [2:0] cursor_y;
 reg is_pressed;
-reg is_s_pressed;
+reg is_g_pressed;
 //wire [2:0] sound_code;
 //wire play_sound;
 wire game_over;
@@ -49,7 +49,7 @@ always @(posedge clk or negedge rstn) begin
         cursor_x <= 3'd0;
         cursor_y <= 3'd0;
         is_pressed <= 1'b0;
-        is_s_pressed <= 1'b0;
+        is_g_pressed <= 1'b0;
         temp <= 8'd0;
     end else begin
         temp <= key_event[7:0];
@@ -65,14 +65,14 @@ always @(posedge clk or negedge rstn) begin
                 8'h1C:  begin cursor_x <= cursor_x - 1; end// A: 左
                 8'h23:  begin cursor_x <= cursor_x + 1; end// D: 右
                 8'h29:  begin is_pressed <= 1'b1; end // Space: 选中
-                8'h1B:  begin is_s_pressed <= 1'b1; end // S: 升变切换
+                8'h34:  begin is_g_pressed <= 1'b1; end // G: 切换升变
                 default: ;
             endcase
             temp <= key_event[7:0];
         end else begin
             temp <= key_event[7:0];
             is_pressed <= 1'b0;
-            is_s_pressed <= 1'b0;
+            is_g_pressed <= 1'b0;
         end
     end
 end
@@ -86,7 +86,7 @@ Play play(
     .cursor_x(cursor_x),
     .cursor_y(cursor_y),
     .is_pressed(is_pressed),
-    .is_s_pressed(is_s_pressed),
+    .is_g_pressed(is_g_pressed),
     .board_data(board_data),
     .sound_code(sound_code),
     .play_sound(play_sound),
