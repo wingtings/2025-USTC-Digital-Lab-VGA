@@ -5,25 +5,34 @@ module DDP(
     input pclk,
     input hen,
     input ven,
+    input [1:0] state,  // 当前游戏状态, 根据不同状态实现不同渲染策略
     input [12*64-1:0] board_data, //棋局
     input [11:0] rdata,
     output reg [11:0]      raddr, 
     output reg [11:0]      rgbb
 );
-    reg [11:0]rgb;
-    reg [11:0]rgbbb;
-    reg [9:0]m,n;
+
+
+reg [11:0]rgb;
+reg [11:0]rgbbb;
+reg [9:0]m,n;
     
-    always @(posedge pclk)begin
-        rgbbb <= rgb;
-    end
+always @(posedge pclk)begin
+    rgbbb <= rgb;
+end
 
-    always @(*) begin
-        rgbb = rgbbb;
-    end
+always @(*) begin
+    rgbb = rgbbb;
+end
 
-    reg [11:0] addra;
-    wire [11:0] douta [13:0];
+reg [11:0] addra;
+wire [11:0] douta [13:0];
+
+// 游戏状态定义
+localparam PLAY_STATE = 2'b01;
+localparam BLACK_WIN_STATE = 2'b10; // 黑胜
+localparam WHITE_WIN_STATE = 2'b11; // 白胜
+localparam DRAW_STATE = 2'b00; // 和棋
 
 blk_mem_gen_w_wang0001 w_wang0001 (
   .clka(pclk),    // input wire clka
