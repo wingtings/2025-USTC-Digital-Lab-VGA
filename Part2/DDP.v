@@ -283,7 +283,7 @@ always @ (*) begin
     end
     else begin
         addra = ((n - 60) % 60) * 60 + ((m - 60) % 60); //统一地址
-        addra_sans = ((n - 150) % 150) * 150 + ((m - 570) % 150); //统一sans地址
+        addra_sans = (n - 150) * 150 + (m - 570); //统一sans地址
         if(ven&&hen) begin  
             if(m>=60 && m<540 && n>=60 && n<540) begin
                 //首先看光标
@@ -420,6 +420,7 @@ always @ (*) begin
               else if (state == BLACK_WIN_STATE) rgb = douta_sans[8]; //黑方胜利
               else rgb = douta_sans[1]; //平局
             end
+            else rgb = 12'h000;
         end
         else rgb=12'h000;
     end
