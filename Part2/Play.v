@@ -148,7 +148,7 @@ module Play(
                             QUEEN: begin
                                 path_clear = 1;
                                 if (tx == sel_x || ty == sel_y) begin
-                                    if (tx == sel_x) begin 垂直移动
+                                    if (tx == sel_x) begin //垂直移动
                                         if (ty > sel_y) begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > sel_y && k_chk < ty && board[k_chk][tx][4]) path_clear = 0;
                                         end else begin
@@ -196,7 +196,6 @@ module Play(
     end
 
     // 棋盘数据输出, 将二维棋盘数据展开为一维输出, 每个格子占 12 位, 一共有 64帧输出, 帧数据格式:
-    // board_data 格式: 每个格子 12 位
     // [11:10]: 保留位 00
     // [9]: 光标状态(1: 已选中, 0: 未选中) 已选中的是红色光标，未选中是黑色光标
     // [8]: 是否有光标 (1: 有光标, 0: 无光标)
@@ -243,32 +242,32 @@ module Play(
         case (current_piece_type)
             PAWN: begin
                 if (turn == WHITE) begin
-                    // Move 1 step forward
+                    // 前进 1 格
                     if (abs_dx == 0 && cursor_y == sel_y + 1 && !board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // Move 2 steps forward
+                    // 前进 2 格
                     else if (abs_dx == 0 && cursor_y == sel_y + 2 && sel_y == 1 && !board[sel_y+1][sel_x][4] && !board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // Capture
+                    // 吃子
                     else if (abs_dx == 1 && cursor_y == sel_y + 1 && board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // En Passant
+                    // 过路兵
                     else if (abs_dx == 1 && cursor_y == sel_y + 1 && !board[cursor_y][cursor_x][4] && 
                              en_passant_col == cursor_x && board[sel_y][cursor_x][4] && board[sel_y][cursor_x][3] == BLACK && board[sel_y][cursor_x][2:0] == PAWN) begin
                         is_legal_move = 1;
                         is_en_passant = 1;
                     end
                 end else begin // BLACK
-                    // Move 1 step forward (y decreases)
+                    
                     if (abs_dx == 0 && cursor_y == sel_y - 1 && !board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // Move 2 steps forward
+                    
                     else if (abs_dx == 0 && cursor_y == sel_y - 2 && sel_y == 6 && !board[sel_y-1][sel_x][4] && !board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // Capture
+                    
                     else if (abs_dx == 1 && cursor_y == sel_y - 1 && board[cursor_y][cursor_x][4])
                         is_legal_move = 1;
-                    // En Passant
+                    
                     else if (abs_dx == 1 && cursor_y == sel_y - 1 && !board[cursor_y][cursor_x][4] && 
                              en_passant_col == cursor_x && board[sel_y][cursor_x][4] && board[sel_y][cursor_x][3] == WHITE && board[sel_y][cursor_x][2:0] == PAWN) begin
                         is_legal_move = 1;
@@ -279,14 +278,13 @@ module Play(
             
             ROOK: begin
                 if (abs_dx == 0 || abs_dy == 0) begin
-                    // Check path
-                    if (abs_dx == 0) begin // Vertical
+                    if (abs_dx == 0) begin // 垂直移动
                         for (k = 1; k < 8; k = k + 1) begin
                             if (k < abs_dy) begin
                                 if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][sel_x][4]) path_blocked = 1;
                             end
                         end
-                    end else begin // Horizontal
+                    end else begin // 水平移动
                         for (k = 1; k < 8; k = k + 1) begin
                             if (k < abs_dx) begin
                                 if (board[sel_y][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
@@ -315,14 +313,14 @@ module Play(
             
             QUEEN: begin
                 if (abs_dx == 0 || abs_dy == 0) begin
-                    // Rook-like move
-                    if (abs_dx == 0) begin // Vertical
+                    // 直接复刻车的走法
+                    if (abs_dx == 0) begin
                         for (k = 1; k < 8; k = k + 1) begin
                             if (k < abs_dy) begin
                                 if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][sel_x][4]) path_blocked = 1;
                             end
                         end
-                    end else begin // Horizontal
+                    end else begin
                         for (k = 1; k < 8; k = k + 1) begin
                             if (k < abs_dx) begin
                                 if (board[sel_y][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
@@ -331,7 +329,7 @@ module Play(
                     end
                     if (!path_blocked) is_legal_move = 1;
                 end else if (abs_dx == abs_dy) begin
-                    // Bishop-like move
+                    // 直接复刻象的走法
                     for (k = 1; k < 8; k = k + 1) begin
                         if (k < abs_dx) begin
                             if (board[(cursor_y > sel_y ? sel_y + k : sel_y - k)][(cursor_x > sel_x ? sel_x + k : sel_x - k)][4]) path_blocked = 1;
@@ -345,20 +343,20 @@ module Play(
                 if (abs_dx <= 1 && abs_dy <= 1) begin
                     is_legal_move = 1;
                 end else if (abs_dy == 0 && abs_dx == 2) begin
-                    // Castling
+                    // 王车易位
                     if (turn == WHITE && !piece_moved[0]) begin
-                        if (cursor_x == 6 && !piece_moved[2] && !board[0][5][4] && !board[0][6][4]) begin // King side
+                        if (cursor_x == 6 && !piece_moved[2] && !board[0][5][4] && !board[0][6][4]) begin // 王侧
                             is_legal_move = 1;
                             is_castling = 1;
-                        end else if (cursor_x == 2 && !piece_moved[1] && !board[0][1][4] && !board[0][2][4] && !board[0][3][4]) begin // Queen side
+                        end else if (cursor_x == 2 && !piece_moved[1] && !board[0][1][4] && !board[0][2][4] && !board[0][3][4]) begin // 后侧
                             is_legal_move = 1;
                             is_castling = 1;
                         end
                     end else if (turn == BLACK && !piece_moved[3]) begin
-                        if (cursor_x == 6 && !piece_moved[5] && !board[7][5][4] && !board[7][6][4]) begin // King side
+                        if (cursor_x == 6 && !piece_moved[5] && !board[7][5][4] && !board[7][6][4]) begin // 王侧
                             is_legal_move = 1;
                             is_castling = 1;
-                        end else if (cursor_x == 2 && !piece_moved[4] && !board[7][1][4] && !board[7][2][4] && !board[7][3][4]) begin // Queen side
+                        end else if (cursor_x == 2 && !piece_moved[4] && !board[7][1][4] && !board[7][2][4] && !board[7][3][4]) begin // 后侧
                             is_legal_move = 1;
                             is_castling = 1;
                         end
@@ -509,12 +507,12 @@ module Play(
                                                 
                                                 // 特殊规则处理
                                                 
-                                                // 1. 吃过路兵
+                                                // 吃过路兵
                                                 if (is_en_passant) begin
                                                     board[sel_y][cursor_x] <= 8'b0; // 清除被吃的兵
                                                 end
                                                 
-                                                // 2. 王车易位
+                                                // 王车易位
                                                 if (is_castling) begin
                                                     if (cursor_x == 6) begin // King side
                                                         board[sel_y][5] <= board[sel_y][7]; // Move Rook
@@ -539,7 +537,7 @@ module Play(
                                                     end
                                                 end
                                                 
-                                                // 更新 en_passant_col
+                                                // 更新过路兵状态
                                                 if (board[sel_y][sel_x][2:0] == PAWN && abs_dy == 2) begin
                                                     en_passant_col <= sel_x;
                                                 end else begin
