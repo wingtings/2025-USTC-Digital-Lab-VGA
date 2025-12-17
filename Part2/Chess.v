@@ -9,7 +9,7 @@ module Chess(
     output         hs,
     output         vs,
     output         pwm,
-    output reg     start
+    output         start
 );
 
 // 游戏状态定义
