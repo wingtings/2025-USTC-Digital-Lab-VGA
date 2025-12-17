@@ -9,8 +9,7 @@ module Play(
     output [12*64-1:0] board_data,  // 一位棋盘数据输出, 这里是把 8x8 的棋盘按照从上到下从左到右的顺序成一维数组, 发给渲染模块(DDP) 进行画面渲染
     output reg [2:0] sound_code,    // 音效码, 发给 Sound 模块指定需要播放的音效
     output reg play_sound,  // 音效使能信号, 发给 Sound 模块指定当前是否需要播放音效
-    output [7:0] wanted_promotion, // 期望升变的棋子类型, 发给 DDP 模块用于渲染额外棋子, 如果当前棋子不需要升变的话会直接输出当前光标所在格子内的棋子的数据
-    output turn_state
+    output [7:0] wanted_promotion // 期望升变的棋子类型, 发给 DDP 模块用于渲染额外棋子, 如果当前棋子不需要升变的话会直接输出当前光标所在格子内的棋子的数据
 );
 
     // 棋盘寄存器堆: 8x8, 每个寄存器 8 位
@@ -21,7 +20,6 @@ module Play(
 
     // 游戏状态
     reg turn; // 当前回合: 0: 白方, 1: 黑方
-    assign turn_state = turn;
     reg has_selected; // 是否已选中棋子
     reg [2:0] sel_x; // 选中棋子 X 坐标
     reg [2:0] sel_y; // 选中棋子 Y 坐标
@@ -72,9 +70,6 @@ module Play(
     reg prev_g_pressed;
     wire g_pressed_pulse = is_g_pressed && !prev_g_pressed;
 
-    // ---------------------------------------------------------
-    // Legal Moves Mask Generation (for highlighting)
-    // ---------------------------------------------------------
     reg [63:0] legal_moves_mask;
     integer tx, ty, k_chk;
     reg path_clear;
@@ -84,29 +79,28 @@ module Play(
         if (has_selected) begin
             for (ty = 0; ty < 8; ty = ty + 1) begin
                 for (tx = 0; tx < 8; tx = tx + 1) begin
-                    // Basic check: Target is not own piece (except for castling, but castling target is empty)
                     if (!(board[ty][tx][4] && board[ty][tx][3] == turn)) begin
                         case (board[sel_y][sel_x][2:0])
                             PAWN: begin
                                 if (turn == WHITE) begin
-                                    // Forward 1
+                                    // 前进 1 格
                                     if (tx == sel_x && ty == sel_y + 1 && !board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // Forward 2
+                                    // 前进 2 格
                                     else if (tx == sel_x && ty == sel_y + 2 && sel_y == 1 && !board[sel_y+1][sel_x][4] && !board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // Capture
+                                    // 吃子
                                     else if ((tx == sel_x + 1 || tx == sel_x - 1) && ty == sel_y + 1 && board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // En Passant
+                                    // 过路兵
                                     else if ((tx == sel_x + 1 || tx == sel_x - 1) && ty == sel_y + 1 && !board[ty][tx][4] &&
                                              en_passant_col == tx && board[sel_y][tx][4] && board[sel_y][tx][3] == BLACK && board[sel_y][tx][2:0] == PAWN)
                                         legal_moves_mask[ty*8 + tx] = 1;
                                 end else begin // BLACK
-                                    // Forward 1
+                                    //  前进 1 格
                                     if (tx == sel_x && ty == sel_y - 1 && !board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // Forward 2
+                                    //  前进 2 格
                                     else if (tx == sel_x && ty == sel_y - 2 && sel_y == 6 && !board[sel_y-1][sel_x][4] && !board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // Capture
+                                    //  吃子
                                     else if ((tx == sel_x + 1 || tx == sel_x - 1) && ty == sel_y - 1 && board[ty][tx][4]) legal_moves_mask[ty*8 + tx] = 1;
-                                    // En Passant
+                                    //  过路兵
                                     else if ((tx == sel_x + 1 || tx == sel_x - 1) && ty == sel_y - 1 && !board[ty][tx][4] &&
                                              en_passant_col == tx && board[sel_y][tx][4] && board[sel_y][tx][3] == WHITE && board[sel_y][tx][2:0] == PAWN)
                                         legal_moves_mask[ty*8 + tx] = 1;
@@ -116,13 +110,13 @@ module Play(
                             ROOK: begin
                                 if (tx == sel_x || ty == sel_y) begin
                                     path_clear = 1;
-                                    if (tx == sel_x) begin // Vertical
+                                    if (tx == sel_x) begin // 垂直移动
                                         if (ty > sel_y) begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > sel_y && k_chk < ty && board[k_chk][tx][4]) path_clear = 0;
                                         end else begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > ty && k_chk < sel_y && board[k_chk][tx][4]) path_clear = 0;
                                         end
-                                    end else begin // Horizontal
+                                    end else begin // 水平移动
                                         if (tx > sel_x) begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > sel_x && k_chk < tx && board[ty][k_chk][4]) path_clear = 0;
                                         end else begin
@@ -154,14 +148,13 @@ module Play(
                             QUEEN: begin
                                 path_clear = 1;
                                 if (tx == sel_x || ty == sel_y) begin
-                                    // Rook-like
-                                    if (tx == sel_x) begin // Vertical
+                                    if (tx == sel_x) begin 垂直移动
                                         if (ty > sel_y) begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > sel_y && k_chk < ty && board[k_chk][tx][4]) path_clear = 0;
                                         end else begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > ty && k_chk < sel_y && board[k_chk][tx][4]) path_clear = 0;
                                         end
-                                    end else begin // Horizontal
+                                    end else begin // 水平移动
                                         if (tx > sel_x) begin
                                             for (k_chk = 0; k_chk < 8; k_chk = k_chk + 1) if (k_chk > sel_x && k_chk < tx && board[ty][k_chk][4]) path_clear = 0;
                                         end else begin
@@ -170,7 +163,7 @@ module Play(
                                     end
                                     if (path_clear) legal_moves_mask[ty*8 + tx] = 1;
                                 end else if ((tx > sel_x ? tx - sel_x : sel_x - tx) == (ty > sel_y ? ty - sel_y : sel_y - ty)) begin
-                                    // Bishop-like
+                                    // 斜线移动
                                     for (k_chk = 1; k_chk < 8; k_chk = k_chk + 1) begin
                                         if (k_chk < (tx > sel_x ? tx - sel_x : sel_x - tx)) begin
                                             if (board[ty > sel_y ? sel_y + k_chk : sel_y - k_chk][tx > sel_x ? sel_x + k_chk : sel_x - k_chk][4]) path_clear = 0;
@@ -184,7 +177,7 @@ module Play(
                                 if ((tx > sel_x ? tx - sel_x : sel_x - tx) <= 1 && (ty > sel_y ? ty - sel_y : sel_y - ty) <= 1) begin
                                     legal_moves_mask[ty*8 + tx] = 1;
                                 end
-                                // Castling
+                                // 王车易位
                                 else if (ty == sel_y && (tx > sel_x ? tx - sel_x : sel_x - tx) == 2) begin
                                     if (turn == WHITE && !piece_moved[0]) begin
                                         if (tx == 6 && !piece_moved[2] && !board[0][5][4] && !board[0][6][4]) legal_moves_mask[ty*8 + tx] = 1;
@@ -202,9 +195,9 @@ module Play(
         end
     end
 
-    // 输出映射: 将 2D board 映射到 1D board_data
+    // 棋盘数据输出, 将二维棋盘数据展开为一维输出, 每个格子占 12 位, 一共有 64帧输出, 帧数据格式:
     // board_data 格式: 每个格子 12 位
-    // [11:10]: 预留/填充 (2'b0)
+    // [11:10]: 保留位 00
     // [9]: 光标状态(1: 已选中, 0: 未选中) 已选中的是红色光标，未选中是黑色光标
     // [8]: 是否有光标 (1: 有光标, 0: 无光标)
     // [7:0]: 棋盘数据 (board[y][x])
