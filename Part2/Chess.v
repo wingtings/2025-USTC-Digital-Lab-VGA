@@ -57,7 +57,7 @@ always @(posedge clk or negedge rstn) begin
             case (key_event[7:0])
                 8'h43:  begin cursor_y <= cursor_y - 1; end// I: 上
                 8'h42:  begin cursor_y <= cursor_y + 1; end// K: 下
-                8'h33:  begin cursor_x <= cursor_x - 1; end// H: 左
+                8'h3B:  begin cursor_x <= cursor_x - 1; end// J: 左
                 8'h4B:  begin cursor_x <= cursor_x + 1; end// L: 右
                 8'h1D:  begin cursor_y <= cursor_y - 1; end// W: 上
                 8'h1B:  begin cursor_y <= cursor_y + 1; end// S: 下
