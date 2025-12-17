@@ -8,7 +8,8 @@ module Chess(
     output  [3:0]  blue,
     output         hs,
     output         vs,
-    output         pwm
+    output         pwm,
+    output reg     start
 );
 
 // 游戏状态定义
@@ -28,7 +29,7 @@ reg is_pressed;
 reg is_g_pressed;
 wire [2:0] sound_code;
 wire play_sound;
-wire game_over;
+//wire game_over;
 wire [12*64-1:0] board_data;
 wire [10:0] key_event;   // 键盘事件寄存器
 reg [7:0] temp; // 上一个时钟周期的按键码
@@ -96,7 +97,8 @@ Sound sound(
     .rstn(rstn),
     .sound_code(sound_code),
     .play_sound(play_sound),
-    .B(pwm)
+    .B(pwm),
+    .start(start)
 );
 
 DDP DDP(
@@ -105,6 +107,7 @@ DDP DDP(
     .board_data(board_data),
     .rstn(rstn),
     .pclk(pclk),
+    .clk(clk),
     .rdata(douta),       // 连接图像数据输入
     .raddr(addra),       // 连接图像地址输出
     .rgbb({red,green,blue}),

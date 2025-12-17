@@ -3,23 +3,23 @@ module Sound(
     input rstn,             
     input [2:0] sound_code,
     input play_sound,
-    output reg B
+    output reg B,
+    output reg start
 );
 
-reg is_playing;
 reg [2:0] current_sound_code;
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn) begin
-        is_playing <= 0;
+        start <= 0;
         current_sound_code <= 0;
     end
     else if(play_sound) begin
-        is_playing <= 1;            // 收到脉冲，开始播放
+        start <= 1;            // 收到脉冲，开始播放
         current_sound_code <= sound_code; // 锁存当前的音效代码
     end
     else if(state >= 48) begin      // 播放结束条件（对应你case的最大状态）
-        is_playing <= 0;
+        start <= 0;
     end
 end
 
@@ -41,14 +41,14 @@ always@(posedge clk,negedge rstn)
 reg [8:1]state;
 always@(posedge clk_out,negedge rstn)         
     if(~rstn) state<=0;
-    else if(is_playing) 
+    else if(start) 
         // if(state!=247)
         state<=state+1;
         // else state<=0;
  
 reg [5:1]m; //音符
 always@(*) //根据 sound_code 选择音符
-    if(is_playing && (current_sound_code == 3'd1) ) begin //选择音效
+    if(start && (current_sound_code == 3'd1) ) begin //选择音效
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -108,7 +108,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if(is_playing && (current_sound_code == 3'd2) ) begin //取消选择
+    else if(start && (current_sound_code == 3'd2) ) begin //取消选择
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -168,7 +168,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if (is_playing && (current_sound_code == 3'd3) ) begin //移动音效
+    else if (start && (current_sound_code == 3'd3) ) begin //移动音效
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -228,7 +228,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if (is_playing && (current_sound_code == 3'd4) ) begin //吃子音效
+    else if (start && (current_sound_code == 3'd4) ) begin //吃子音效
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -288,7 +288,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if (is_playing && (current_sound_code == 3'd5) ) begin //非法操作
+    else if (start && (current_sound_code == 3'd5) ) begin //非法操作
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -348,7 +348,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if (is_playing && (current_sound_code == 3'd6) ) begin //升变音效
+    else if (start && (current_sound_code == 3'd6) ) begin //升变音效
         case(state) 
         0	:m=13;
         1	:m=13;
@@ -408,7 +408,7 @@ always@(*) //根据 sound_code 选择音符
         default: m=0;
         endcase
     end
-    else if (is_playing && (current_sound_code == 3'd7) ) begin //游戏结束音效
+    else if (start && (current_sound_code == 3'd7) ) begin //游戏结束音效
         case(state) 
         0	:m=13;
         1	:m=13;

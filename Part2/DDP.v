@@ -3,6 +3,7 @@ module DDP(
     input rstn,
 //  input ifstart,
     input pclk,
+    input clk,
     input hen,
     input ven,
     input [1:0] state,  // 当前游戏状态, 根据不同状态实现不同渲染策略
@@ -31,10 +32,10 @@ reg [11:0] addra;
 wire [11:0] douta [13:0];
 
 // 游戏状态定义
-//localparam PLAY_STATE = 2'b01;//play
-//localparam BLACK_WIN_STATE = 2'b10; // 黑胜
-//localparam WHITE_WIN_STATE = 2'b11; // 白胜
-//localparam DRAW_STATE = 2'b00; // Draw
+localparam PLAY_STATE = 2'b01;//play
+localparam BLACK_WIN_STATE = 2'b10; // 黑胜
+localparam WHITE_WIN_STATE = 2'b11; // 白胜
+localparam DRAW_STATE = 2'b00; // Draw
 
 blk_mem_gen_w_wang0001 w_wang0001 (
   .clka(pclk),    // input wire clka
@@ -161,6 +162,103 @@ blk_mem_gen_b_box b_box (
   .douta(douta[13])  // output wire [11 : 0] douta
 );
 
+reg [14:0] addra_sans; //渲染sans
+wire [11:0] douta_sans [8:1]; //各个模块
+
+reg [25:0] timer_cnt;   // 播放速度计时器
+reg [2:0]  frame_idx;   // 当前帧索引 (0, 1, 2...)
+localparam FRAME_NUM    = 6;         // 图片总数
+localparam SWITCH_TIME  = 20000000;  // 切换间隔 (约0.5秒)
+
+always @(posedge clk) begin
+    if(!rstn) begin
+        timer_cnt <= 0;
+        frame_idx <= 1;
+    end else begin
+        if(timer_cnt >= SWITCH_TIME) begin
+            timer_cnt <= 0;
+            if(frame_idx == FRAME_NUM)
+                frame_idx <= 1;
+            else
+                frame_idx <= frame_idx + 1;
+        end else begin
+            timer_cnt <= timer_cnt + 1;
+        end
+    end
+end
+
+blk_mem_gen_sans_1 sans_1 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[1])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans_2 sans_2 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[2])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans_3 sans_3 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[3])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans_4 sans_4 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[4])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans5 sans_5 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[5])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans6 sans_6 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[6])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans_7 sans_7 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[7])  // output wire [11 : 0] douta
+);
+
+blk_mem_gen_sans_8 sans_8 (
+  .clka(pclk),    // input wire clka
+  .ena(1'b1),      // input wire ena
+  .wea(1'b0),      // input wire [0 : 0] wea
+  .addra(addra_sans),  // input wire [11 : 0] addra
+  .dina(12'b0),    // input wire [11 : 0] dina
+  .douta(douta_sans[8])  // output wire [11 : 0] douta
+);
+
 always @(posedge pclk) begin
 if(!rstn) 
     begin 
@@ -181,9 +279,11 @@ always @ (*) begin
     if(!rstn) begin
         rgb=12'h000;   
         addra = 12'b0; 
+        addra_sans = 15'b0;
     end
     else begin
         addra = ((n - 60) % 60) * 60 + ((m - 60) % 60); //统一地址
+        addra_sans = ((n - 150) % 150) * 150 + ((m - 570) % 150); //统一sans地址
         if(ven&&hen) begin  
             if(m>=60 && m<540 && n>=60 && n<540) begin
                 //首先看光标
@@ -313,6 +413,13 @@ always @ (*) begin
                     default: rgb = 12'h000;  //没有棋子的时候渲染黑色          
                 endcase
               end
+
+            else if (m>=570 && m<720 && n>=150 && n<300) begin //渲染侧边 150*150
+              if (state == PLAY_STATE) rgb = douta_sans[frame_idx];
+              else if (state == WHITE_WIN_STATE) rgb = douta_sans[7]; //白方胜利
+              else if (state == BLACK_WIN_STATE) rgb = douta_sans[8]; //黑方胜利
+              else rgb = douta_sans[1]; //平局
+            end
         end
         else rgb=12'h000;
     end
