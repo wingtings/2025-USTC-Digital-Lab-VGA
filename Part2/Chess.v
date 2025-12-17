@@ -20,7 +20,7 @@ localparam DRAW_STATE = 2'b00; // 和棋
 wire hen,ven;
 wire [11:0] addra;
 wire [11:0] douta;
-wire turn; // 0: White, 1: Black
+
 wire [1:0] state;
 reg [2:0] cursor_x;
 reg [2:0] cursor_y;
@@ -28,7 +28,7 @@ reg is_pressed;
 reg is_g_pressed;
 wire [2:0] sound_code;
 wire play_sound;
-//wire [1:0] game_over; //00: Draw, 01: Play, 10: Black Win, 11: White Win
+wire game_over;
 wire [12*64-1:0] board_data;
 wire [10:0] key_event;   // 键盘事件寄存器
 reg [7:0] temp; // 上一个时钟周期的按键码
@@ -55,13 +55,12 @@ always @(posedge clk or negedge rstn) begin
         temp <= key_event[7:0];
         if (key_event[10] && !key_event[8] && temp != key_event[7:0]) begin
             case (key_event[7:0])
-                8'h15:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y - 1; end// Q: 左上
-                8'h24:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y - 1; end// E: 右上
-                8'h1A:  begin cursor_x <= cursor_x - 1; cursor_y <= cursor_y + 1; end// Z: 左下
-                8'h21:  begin cursor_x <= cursor_x + 1; cursor_y <= cursor_y + 1; end// C: 右下
+                8'h43:  begin cursor_y <= cursor_y - 1; end// I: 上
+                8'h42:  begin cursor_y <= cursor_y + 1; end// K: 下
+                8'h33:  begin cursor_x <= cursor_x - 1; end// H: 左
+                8'h4B:  begin cursor_x <= cursor_x + 1; end// L: 右
                 8'h1D:  begin cursor_y <= cursor_y - 1; end// W: 上
-                8'h22:  begin cursor_y <= cursor_y + 1; end// X: 下
-                8'h1B:  begin cursor_y <= cursor_y + 1; end// S: 下 // 这样使用 WASD 控制光标移动, 也能兼容 QWEADZXC 对角移动
+                8'h1B:  begin cursor_y <= cursor_y + 1; end// S: 下
                 8'h1C:  begin cursor_x <= cursor_x - 1; end// A: 左
                 8'h23:  begin cursor_x <= cursor_x + 1; end// D: 右
                 8'h29:  begin is_pressed <= 1'b1; end // Space: 选中
@@ -89,8 +88,7 @@ Play play(
     .board_data(board_data),
     .sound_code(sound_code),
     .play_sound(play_sound),
-    .wanted_promotion(wanted_promotion), // 期望升变的棋子类型
-    .turn_state(turn)
+    .wanted_promotion(wanted_promotion) // 期望升变的棋子类型
 );
 
 Sound sound(
@@ -112,7 +110,6 @@ DDP DDP(
     .rgbb({red,green,blue}),
     .state(state),  // 根据当前状态实现不同渲染策略
     .wanted_promotion(wanted_promotion) //升变棋子信息
-//    .game_over(game_over) //游戏结束信息
 );
 
 DST DST(
@@ -131,13 +128,5 @@ Keyboard keyboard(
     .ps2_d(PS2_DATA),
     .key_event(key_event)
 );
-
-// Over over(
-//     .clkk(clk),
-//     .rstn(rstn),
-//     .board_data(board_data),
-//     .turn(turn), // 0: White, 1: Black
-//     .game_over(game_over) // 00: Draw, 01: Play, 10: Black Win, 11: White Win
-// );
 
 endmodule
