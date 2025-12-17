@@ -18,7 +18,7 @@ always @(posedge clk or negedge rstn) begin
         start <= 1;            // 收到脉冲，开始播放
         current_sound_code <= sound_code; // 锁存当前的音效代码
     end
-    else if(state >= 48) begin      // 播放结束条件（对应你case的最大状态）
+    else if(state >= 24) begin      // 播放结束条件（对应你case的最大状态）
         start <= 0;
     end
 end
