@@ -282,7 +282,7 @@ always @ (*) begin
         addra_sans = 15'b0;
     end
     else begin
-        if(m>=60 && m<540 && n>=60 && n<540) addra = ((n - 60) % 60) * 60 + ((m - 60) % 60); //统一地址
+        if ( (m>=60 && m<540 && n>=60 && n<540) || (m>=600 && m<660 && n>=360 && n<420) ) addra = ((n - 60) % 60) * 60 + ((m - 60) % 60); //统一地址
         else addra = 12'b0;
         if (n >= 150 && n < 300 && m >= 570 && m < 720) addra_sans = (n - 150) * 150 + (m - 570);
         else addra_sans = 0; 
